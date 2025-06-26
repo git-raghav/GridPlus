@@ -1,0 +1,25 @@
+<% layout("/layouts/boilerplate") %>
+
+<h3><b>All Meters</b></h3>
+<div class="row row-cols-lg-4 row-cols-md-3 row-cols-sm-2 row-cols-1 g-4">
+	<% for(let meter of allMeters) { %>
+	<a href="/meters/<%= meter._id %>" class="listing-link">
+		<div class="card col">
+			<img src="<%= meter.status.toLowerCase() === 'alert' ? '/assets/caution1.png' : '/assets/meter2.jpg' %>" class="card-img-top" alt="Property Image" style="height: 12rem" />
+			<div class="card-body">
+				<p class="card-text">
+					<b><%= meter.name %></b> <br />
+					Current: <%= meter.current[4] %> A <br />
+					Voltage: <%= meter.voltage[4] %> V <br />
+					<b
+						>Status:
+						<span class="<%= meter.status.toLowerCase() === 'healthy' ? 'status-healthy' : 'status-alert' %>">
+							<%= meter.status %>
+						</span>
+					</b>
+				</p>
+			</div>
+		</div>
+	</a>
+	<% } %>
+</div>
