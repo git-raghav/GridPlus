@@ -28,12 +28,10 @@ const meterSchema = new mongoose.Schema({
 	},
 	alertCount: {
 		type: Number,
-		required: true,
 	},
 	createdAt: {
 		type: Date,
 		default: Date.now,
-		required: true,
 	},
 	status: {
 		type: String,
@@ -61,7 +59,24 @@ const meterSchema = new mongoose.Schema({
 			ref: "Alert",
 		},
 	],
-    updatedAt: [Date]
+	updatedAt: [Date],
+	fire: {
+		type: Boolean,
+		default: false,
+	},
+	owner: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "User",
+		required: true,
+	},
+});
+
+//this post middleware will run after a document is deleted to delete its alerts
+//findbyidanddelete indirectly calls findOneAndDelete and when findOneAndDelete operation is done on meterSchema this middleware will run automatically
+meterSchema.post("findOneAndDelete", async (meter) => {
+	if (meter.alerts.length > 0) {
+		await Alert.deleteMany({ _id: { $in: meter.alerts } });
+	}
 });
 
 const Meter = mongoose.model("Meter", meterSchema);

@@ -23,6 +23,12 @@ const alertSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    comment: {
+        type: String,
+        minLength: 0,
+        maxLength: 100,
+        default: "",
+    }
 });
 
 const Alert = mongoose.model("Alert", alertSchema);

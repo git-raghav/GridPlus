@@ -1,14 +1,28 @@
+if(process.env.NODE_ENV !== "production") {
+    require("dotenv").config(); // load environment variables from .env file in development mode
+}
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
+
 const path = require("path");
 const methodOverride = require("method-override"); // for PUT and DELETE requests
 const ejsMate = require("ejs-mate");
 const ExpressError = require("./utils/ExpressError.js"); // custom error class for Express
-const meters = require("./routes/meter.js"); // importing the listing routes
-const alerts = require("./routes/alert.js"); // importing the review routes
-const Meter = require("./models/meter.js"); // importing the Meter model
-const Alert = require("./models/alert.js"); // importing the Meter model
+const session = require("express-session");
+const MongoStore = require("connect-mongo");
+const flash = require("connect-flash"); // for flash messages
+const passport = require("passport"); // for authentication
+const LocalStrategy = require("passport-local");
+const cron = require("node-cron");
+
+const meterRouter = require("./routes/meter.js"); // importing the meter routes
+const alertRouter = require("./routes/alert.js"); // importing the review routes
+const userRouter = require("./routes/user.js"); // importing the user routes
+
+const User = require("./models/user.js"); // importing the User model
+
+const simulateNewReading = require("./utils/simulateReadingJob");
 
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
@@ -17,198 +31,104 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.engine("ejs", ejsMate); // using ejsMate for layout support in EJS
 
+//session handler
+app.use(
+    session({
+        store: MongoStore.create({
+            mongoUrl: process.env.MONGO_URL,
+            crypto: {
+                secret: process.env.SESSION_SECRET
+            },
+            touchAfter: 24 * 60 * 60,
+        }),
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: true,
+        cookie: {
+            expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            httpOnly: true, // prevents client-side JavaScript from accessing the cookie
+        },
+    })
+);
+app.use(flash());
+
+// Passport.js configuration and also it uses session so we have to use passport just after session
+app.use(passport.initialize());//Initializes Passport middleware.
+app.use(passport.session());//Enables persistent login sessions using cookies and express-session.
+passport.use(new LocalStrategy(User.authenticate())); // Tells Passport to use the local strategy (username + password).User.authenticate() is provided by passport-local-mongoose.
+passport.serializeUser(User.serializeUser()); // These handle how user data is stored in and retrieved from the session.
+passport.deserializeUser(User.deserializeUser()); // These handle how user data is stored in and retrieved from the session.
+
 /* -------------------------- connecting to MongoDB ------------------------- */
-const MONGO_URL = "mongodb://127.0.0.1:27017/gridplus";
+const MONGO_URL = process.env.MONGO_URL;
+
 main()
 	.then(() => {
 		console.log("Connected to MongoDB");
+        // cron.schedule("*/10 * * * *", async () => {
+		// 	console.log("⏱️  Running meter simulation...");
+		// 	try {
+		// 		await simulateNewReading();
+		// 	} catch (err) {
+		// 		console.error("❌ Error in simulateNewReading:", err.message);
+		// 	}
+		// });
 	})
 	.catch((err) => console.log(err));
 
 async function main() {
-	await mongoose.connect(MONGO_URL);
+    try {
+       await mongoose.connect(MONGO_URL, {
+           serverSelectionTimeoutMS: 10000,
+           socketTimeoutMS: 45000,
+       });
+    } catch (err) {
+       console.error("Initial MongoDB connection error:", err);
+       process.exit(1);
+    }
 }
 
-app.get("/", (req, res) => {
-	res.send("Hi Iam Root");
+// Middleware to expose flash messages to views
+app.use((req, res, next) => {
+    res.locals.success = req.flash("success");
+    res.locals.error = req.flash("error");
+    res.locals.currentUser = req.user; // to access current user in views
+    next();
 });
 
 // routes
-/* ---------------------- route to render all meters ---------------------- */
-app.get("/meters", async (req, res) => {
-	const allMeters = await Meter.find({});
-	// console.log(allMeters);
-	res.render("meters/index.ejs", { allMeters });
+app.get("/", (req, res) => {
+    res.redirect("/meters");
 });
-
-/* ------------ route to render the form to register a new meter ------------ */
-app.get("/meters/new", (req, res) => {
-	res.render("meters/new.ejs");
+app.get("/health", (req, res) => {
+	res.send("OK");
 });
-
-app.get("/meters/alerts", async (req, res) => {
-    const allAlerts = await Alert.find({});
-    // console.log(allAlerts);
-    res.render("meters/alert.ejs", { allAlerts });
-});
-
-/* ------------------- register a new meter to the database and redirects to the all meters page ------------------- */
-app.post("/meters", async (req, res) => {
-	try {
-		const { name, location } = req.body.listing;
-
-		// Generate 5 readings for each parameter
-		const current = generateFiveReadings(0, 14);
-		const voltage = generateFiveReadings(215, 240, false);
-		const powerFactor = generateFiveReadings(0.3, 1, true, 2);
-		const temperature = generateFiveReadings(-15, 65, false);
-		const load = current.map((c, i) => parseFloat((c * voltage[i] * powerFactor[i]).toFixed(2)));
-
-		// 5 corresponding timestamps
-		const updatedAt = Array.from({ length: 5 }, () => new Date());
-
-		// Latest reading (for threshold check)
-		const latest = {
-			current: current[4],
-			voltage: voltage[4],
-			powerFactor: powerFactor[4],
-			temperature: temperature[4],
-			load: load[4],
-		};
-
-		// Thresholds
-		const thresholds = {
-			current: { min: 1, max: 13 },
-			voltage: { min: 220, max: 240 },
-			powerFactor: { min: 0.4, max: 1 },
-			temperature: { min: -10, max: 60 },
-			load: { min: 0, max: 3400 },
-		};
-
-		let status = "Healthy";
-		let alertCount = 0;
-		const alertReasons = [];
-
-		if (latest.current < thresholds.current.min || latest.current > thresholds.current.max) {
-			alertCount++;
-			alertReasons.push(`Current ${latest.current}A out of range (${thresholds.current.min}-${thresholds.current.max})`);
-		}
-		if (latest.voltage < thresholds.voltage.min || latest.voltage > thresholds.voltage.max) {
-			alertCount++;
-			alertReasons.push(`Voltage ${latest.voltage}V out of range (${thresholds.voltage.min}-${thresholds.voltage.max})`);
-		}
-		if (latest.powerFactor < thresholds.powerFactor.min || latest.powerFactor > thresholds.powerFactor.max) {
-			alertCount++;
-			alertReasons.push(
-				`Power Factor ${latest.powerFactor} out of range (${thresholds.powerFactor.min}-${thresholds.powerFactor.max})`
-			);
-		}
-		if (latest.temperature < thresholds.temperature.min || latest.temperature > thresholds.temperature.max) {
-			alertCount++;
-			alertReasons.push(
-				`Temperature ${latest.temperature}°C out of range (${thresholds.temperature.min}-${thresholds.temperature.max})`
-			);
-		}
-		if (latest.load < thresholds.load.min || latest.load > thresholds.load.max) {
-			alertCount++;
-			alertReasons.push(`Load ${latest.load}W out of range (${thresholds.load.min}-${thresholds.load.max})`);
-		}
-
-		if (alertCount > 0) {
-			status = "Alert";
-		}
-
-		const newMeter = new Meter({
-			name,
-			location,
-			current,
-			voltage,
-			powerFactor,
-			temperature,
-			load,
-			updatedAt,
-			status,
-			alertCount,
-			alerts: [],
-		});
-		await newMeter.save();
-
-		// Create alerts for threshold violations
-		if (status === "Alert") {
-			for (let reason of alertReasons) {
-				const alert = await Alert.create({
-					name: name,
-					current: latest.current,
-					voltage: latest.voltage,
-					powerFactor: latest.powerFactor,
-					temperature: latest.temperature,
-					load: latest.load,
-					reason,
-				});
-				newMeter.alerts.push(alert._id);
-			}
-			await newMeter.save();
-		}
-
-		res.redirect("/meters");
-	} catch (err) {
-		console.error("Error creating meter:", err);
-		res.status(500).send("Something went wrong while registering the meter.");
-	}
-});
-
-// Helper function
-function generateFiveReadings(min, max, isFloat = true, decimal = 2) {
-	const readings = [];
-	for (let i = 0; i < 5; i++) {
-		let value = Math.random() * (max - min) + min;
-		readings.push(isFloat ? parseFloat(value.toFixed(decimal)) : Math.floor(value));
-	}
-	return readings;
-}
-
-/* ----- route to render a particular meter details (using id) user clicked on ---- */
-app.get("/meters/:id", async (req, res) => {
-	let { id } = req.params;
-	const meter = await Meter.findById(id).populate("alerts");
-	// console.log(meter);
-	res.render("meters/show.ejs", { meter });
-});
-
-/* --------------------------------------------------------- gets a form to edit a meter -------------------------------------------------------- */
-app.get("/meters/:id/edit", async (req, res) => {
-        let { id } = req.params;
-        const meter = await Meter.findById(id);
-        // console.log(meter);
-        res.render("meters/edit.ejs", { meter });
-    });
-
-
-/* ---------------------------------- deletes a meter from the database and redirects to the all meters page ---------------------------------- */
-app.delete("/meters/:id", async (req, res) => {
-	let { id } = req.params;
-	await Meter.findByIdAndDelete(id);
-	res.redirect("/meters");
-});
-
-
-
-
-
-
+app.use("/", userRouter);
+app.use("/meters", meterRouter);
+app.use("/alerts", alertRouter);
 
 // if no above route matches, this middleware will be called
-// app.all("*", (req, res, next) => {
-// 	next(new ExpressError(404, "Page Not Found"));
-// });
+app.all("*", (req, res, next) => {
+	next(new ExpressError(404, "Page Not Found"));
+});
 
 // Custom error handling middleware jo saare errors ko handle karega
-// app.use((err, req, res, next) => {
-// 	let { statusCode = 500, message = "Something went wrong" } = err;
-// 	res.render("error.ejs", { statusCode, message });
-// });
+app.use((err, req, res, next) => {
+	let { statusCode = 500, message = "Something went wrong" } = err;
+	res.render("error.ejs", { statusCode, message });
+});
 
-const port = 3000;
-app.listen(port, () => {
+const port = process.env.PORT || 3000;
+const server = app.listen(port, "0.0.0.0", () => {
 	console.log(`Server is listening on port ${port}`);
+});
+
+// Set timeout values to prevent 502 errors on Render
+server.keepAliveTimeout = 120 * 1000; // 120 seconds
+server.headersTimeout = 130 * 1000; // must be > keepAliveTimeout
+
+// Catch unhandled promise rejections (like DB or async errors not caught properly)
+process.on("unhandledRejection", (err) => {
+	console.error("Unhandled rejection:", err);
 });

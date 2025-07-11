@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Meter = require("../models/meter.js");// Import the Listing model
-const initData = require('./data.js');// Import the sample data
+const Alert = require("../models/alert.js");// Import the Listing model
+const { sampleMeters, sampleAlerts } = require('./data.js');// Import the sample data
 
 const MONGO_URL= "mongodb://127.0.0.1:27017/gridplus"; // MongoDB connection URL
 main()
@@ -17,7 +18,28 @@ async function main() {
 // This function clears the existing meters and inserts the sample data
 const initDB = async () => {
     await Meter.deleteMany({});
-    await Meter.insertMany(initData.data);
+    await Alert.deleteMany({});
+
+    const insertedAlerts = await Alert.insertMany(sampleAlerts);
+    // Map alert IDs to their respective meters by name
+    const alertMap = {};
+    insertedAlerts.forEach(alert => {
+        if (!alertMap[alert.name]) alertMap[alert.name] = [];
+        alertMap[alert.name].push(alert._id);
+    });
+
+    // Assign alert ObjectIds to their respective meters
+    const updatedMeters = sampleMeters.map(meter => {
+        if (alertMap[meter.name]) {
+            meter.alerts = alertMap[meter.name];
+            meter.alertCount = alertMap[meter.name].length;
+            meter.status = "Alert";
+        }
+        return meter;
+    });
+
+    // Insert updated meters
+    await Meter.insertMany(updatedMeters);
     console.log("Database initialized with sample data");
 }
 

@@ -10,7 +10,7 @@
 	</b>
 </h3>
 
-<div class="row g-4">
+<div class="row g-4 mb-5">
 	<div class="col-lg-6 col-md-12">
 		<div class="chart-wrapper p-4 bg-white" style="min-height: 600px">
 			<h6 class="mb-4"><b>Latest Meter Details</b></h6>
@@ -31,12 +31,13 @@
 					<b>Power Factor:</b> <%= meter.powerFactor[meter.powerFactor.length - 1] %>
 				</li>
 				<li class="list-group-item list-group-item-info rounded show-list">
-					<b>Created On:</b> <%= meter.createdAt.toString().split(" ").slice(1,4).join("/") %>
-				</li>
-				<li class="list-group-item list-group-item-info rounded show-list">
 					<b>Last Updated:</b> <%= meter.updatedAt[meter.updatedAt.length - 1].toString().split(" ").slice(1,5).join("/") %>
 				</li>
 				<li class="list-group-item list-group-item-info rounded show-list"><b>Location:</b> <%= meter.location %></li>
+                <li class="list-group-item list-group-item-info rounded show-list">
+					<b>Created On:</b> <%= meter.createdAt.toString().split(" ").slice(1,4).join("/") %>
+				</li>
+				<li class="list-group-item list-group-item-info rounded show-list"><b>Created by:</b> <%= meter.owner.username %></li>
 			</ul>
 
 			<h6 class="mb-4"><b>Recent Alerts</b></h6>
@@ -115,12 +116,13 @@
 			<canvas id="multilinePerformanceChart" style="height: 100%"></canvas>
 		</div>
 	</div>
+    <% if(currentUser && currentUser._id.equals(meter.owner._id)) { %>
 	<div class="mt-5 mb-5 show-footer">
 		<form action="/meters/<%= meter._id %>/edit" method="GET">
 			<button class="btn btn-dark mb-3">Edit this Meter</button>
 		</form>
-		<form action="/meters/<%= meter._id %>/update" method="POST">
-			<button class="btn btn-dark mb-3">Update Readings</button>
+		<form action="/meters/<%= meter._id %>/refresh?_method=PUT" method="POST">
+			<button class="btn btn-dark mb-3">Refresh Readings</button>
 		</form>
 		<form
 			action="/meters/<%= meter._id %>?_method=DELETE"
@@ -130,6 +132,7 @@
 			<button class="btn btn-danger mb-3">Delete this Meter</button>
 		</form>
 	</div>
+    <% } %>
 </div>
 
 <script>
