@@ -1,6 +1,6 @@
 const Meter = require("../models/meter.js"); // importing the Meter model
 const Alert = require("../models/alert.js"); // importing the Meter model
-const { sendAlertEmail, sendFireAlertEmail } = require("../utils/email.js");
+const { sendAlertEmail, sendFireAlertEmail, sendPaymentRequestEmail } = require("../utils/email.js");
 
 module.exports.index = async (req, res) => {
 	const allMeters = await Meter.find({});
@@ -166,4 +166,16 @@ module.exports.renderEditForm = async (req, res) => {
 		return res.redirect("/meters");
 	}
 	res.render("meters/edit.ejs", { meter });
+};
+
+module.exports.requestPayment = async (req, res) => {
+	let { id } = req.params;
+	const meter = await Meter.findById(id);
+	if (!meter) {
+		req.flash("error", "Meter not found!");
+		return res.redirect("/meters");
+	}
+	sendPaymentRequestEmail(meter);
+	req.flash("success", "Payment request email sent!");
+	res.redirect(`/meters/${id}`);
 };

@@ -21,8 +21,10 @@ const alertRouter = require("./routes/alert.js"); // importing the review routes
 const userRouter = require("./routes/user.js"); // importing the user routes
 
 const User = require("./models/user.js"); // importing the User model
+const Meter = require("./models/meter.js"); // importing the User model
 
 const simulateNewReading = require("./utils/simulateReadingJob");
+const { sendPaymentRequestEmail } = require("./utils/email.js");
 
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
@@ -66,12 +68,25 @@ const MONGO_URL = process.env.MONGO_URL;
 main()
 	.then(() => {
 		console.log("Connected to MongoDB");
-        // cron.schedule("*/10 * * * *", async () => {
+        // cron.schedule("*/1 * * * *", async () => {
 		// 	console.log("⏱️  Running meter simulation...");
 		// 	try {
 		// 		await simulateNewReading();
 		// 	} catch (err) {
 		// 		console.error("❌ Error in simulateNewReading:", err.message);
+		// 	}
+		// });
+        // Payment request every 20 minutes
+		// cron.schedule("*/1 * * * *", async () => {
+		// 	console.log("💸 Sending payment requests for all meters...");
+		// 	try {
+		// 		const meters = await Meter.find({});
+		// 		for (const meter of meters) {
+		// 			await sendPaymentRequestEmail(meter);
+		// 		}
+		// 		console.log("✅ Payment requests sent for all meters.");
+		// 	} catch (err) {
+		// 		console.error("❌ Error in payment request cron:", err.message);
 		// 	}
 		// });
 	})

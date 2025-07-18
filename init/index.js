@@ -1,9 +1,13 @@
+if(process.env.NODE_ENV !== "production") {
+    require("dotenv").config(); // load environment variables from .env file in development mode
+}
 const mongoose = require('mongoose');
 const Meter = require("../models/meter.js");// Import the Listing model
-const Alert = require("../models/alert.js");// Import the Listing model
+const Alert = require("../models/alert.js");// Import the alert model
+const User = require("../models/user.js");// Import the user model
 const { sampleMeters, sampleAlerts } = require('./data.js');// Import the sample data
 
-const MONGO_URL= "mongodb://127.0.0.1:27017/gridplus"; // MongoDB connection URL
+const MONGO_URL = process.env.MONGO_URL; // MongoDB connection URL
 main()
     .then(() => {
         console.log("Connected to MongoDB");

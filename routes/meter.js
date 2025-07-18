@@ -10,6 +10,7 @@ const {
 	updateMeter,
 	deleteMeter,
 	renderEditForm,
+    requestPayment,
 } = require("../controllers/meter.js");
 
 /* ---------------------- route to render all meters ---------------------- */
@@ -26,5 +27,8 @@ router.route("/:id").get(wrapAsync(showMeter)).put(isLoggedIn, isOwner, wrapAsyn
 
 /* --------------------------------------------------------- gets a form to edit a meter -------------------------------------------------------- */
 router.get("/:id/edit", isLoggedIn, isOwner, wrapAsync(renderEditForm));
+
+// Payment request route
+router.post("/:id/request-payment", isLoggedIn, isOwner, wrapAsync(requestPayment));
 
 module.exports = router;

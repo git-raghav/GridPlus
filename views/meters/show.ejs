@@ -4,6 +4,22 @@
 
 <h3 class="mb-5 d-flex flex-wrap justify-content-between align-items-center">
 	<b>Meter Dashboard: <%= meter.name %></b>
+    <form id="paymentForm" action="/meters/<%= meter._id %>/request-payment" method="POST" class="mx-3">
+		<button
+			id="paymentBtn"
+			type="submit"
+			class="btn btn-success"
+			style="
+				background: linear-gradient(90deg, #28a745 60%, #a8e063 100%);
+				color: #fff;
+				font-weight: 600;
+				box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15);
+				border: none;
+			"
+		>
+			<span style="font-size: 1.2em; margin-right: 4px">&#8377;</span>Request Payment
+		</button>
+	</form>
 	<b>
 		Health Status:
 		<span class="<%= meter.status.toLowerCase() === 'healthy' ? 'status-healthy' : 'status-alert' %>"> <%= meter.status %> </span>
@@ -355,5 +371,15 @@
 	}
 	   window.addEventListener("resize", () => {
 		location.reload(); // Refreshes on window resize
+	});
+    document.addEventListener("DOMContentLoaded", function() {
+	  const paymentForm = document.getElementById("paymentForm");
+	  const paymentBtn = document.getElementById("paymentBtn");
+	  if(paymentForm && paymentBtn) {
+	    paymentForm.addEventListener("submit", function() {
+	      paymentBtn.disabled = true;
+	      paymentBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Requesting...';
+	    });
+	  }
 	});
 </script>
