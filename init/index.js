@@ -1,5 +1,5 @@
 if(process.env.NODE_ENV !== "production") {
-    require("dotenv").config(); // load environment variables from .env file in development mode
+    require("dotenv").config({ path: "../.env" }); // load environment variables from .env file in development mode
 }
 const mongoose = require('mongoose');
 const Meter = require("../models/meter.js");// Import the Listing model
@@ -23,6 +23,15 @@ async function main() {
 const initDB = async () => {
     await Meter.deleteMany({});
     await Alert.deleteMany({});
+    await User.deleteMany({});
+
+    const dummyUserId = new mongoose.Types.ObjectId("686d7a12a4f4b63fb354ddf5");
+    const dummyUser = new User({
+        _id: dummyUserId,
+        username: process.env.DEMO_USERNAME,
+        email: process.env.DEMO_EMAIL,
+    });
+    await User.register(dummyUser, process.env.DEMO_PASSWORD);
 
     const insertedAlerts = await Alert.insertMany(sampleAlerts);
     // Map alert IDs to their respective meters by name

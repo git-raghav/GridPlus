@@ -170,7 +170,7 @@ module.exports.renderEditForm = async (req, res) => {
 
 module.exports.requestPayment = async (req, res) => {
 	let { id } = req.params;
-	const meter = await Meter.findById(id);
+	const meter = await Meter.findById(id).populate("owner");
 	if (!meter) {
 		req.flash("error", "Meter not found!");
 		return res.redirect("/meters");

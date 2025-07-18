@@ -231,6 +231,15 @@ h3 {
   color: red;
   font-weight: bold;
 }
+.show-page-info-top {
+    font-size: 18px !important;
+}
+#paymentBtn {
+    background: linear-gradient(90deg, #28a745 60%, #a8e063 100%);
+    font-size: 14px !important;
+    font-weight: 500 !important;
+	border: none;
+}
 /* show page */
 .show-description {
 	font-size: 15px !important;

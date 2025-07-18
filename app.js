@@ -80,7 +80,7 @@ main()
 		// cron.schedule("*/1 * * * *", async () => {
 		// 	console.log("💸 Sending payment requests for all meters...");
 		// 	try {
-		// 		const meters = await Meter.find({});
+		// 		const meters = await Meter.find({}).populate("owner");
 		// 		for (const meter of meters) {
 		// 			await sendPaymentRequestEmail(meter);
 		// 		}

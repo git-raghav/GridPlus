@@ -104,7 +104,7 @@ async function sendPaymentRequestEmail(meter) {
 
 	const mailOptions = {
 		from: process.env.EMAIL_USER,
-		to: "aryan000project@gmail.com",
+		to: meter.owner.email,
 		subject,
 		text,
 		html,

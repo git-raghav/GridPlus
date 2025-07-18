@@ -2,29 +2,30 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<h3 class="mb-5 d-flex flex-wrap justify-content-between align-items-center">
-	<b>Meter Dashboard: <%= meter.name %></b>
-    <form id="paymentForm" action="/meters/<%= meter._id %>/request-payment" method="POST" class="mx-3">
+<div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+	<h5 class="show-page-info-top">
+		<b>Meter Dashboard: <%= meter.name %></b>
+	</h5>
+
+	<h5 class="show-page-info-top">
+		<b>
+			Health Status:
+			<span class="<%= meter.status.toLowerCase() === 'healthy' ? 'status-healthy' : 'status-alert' %>">
+				<%= meter.status %>
+			</span>
+		</b>
+	</h5>
+
+	<form id="paymentForm" action="/meters/<%= meter._id %>/request-payment" method="POST">
 		<button
 			id="paymentBtn"
 			type="submit"
 			class="btn btn-success"
-			style="
-				background: linear-gradient(90deg, #28a745 60%, #a8e063 100%);
-				color: #fff;
-				font-weight: 600;
-				box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15);
-				border: none;
-			"
 		>
-			<span style="font-size: 1.2em; margin-right: 4px">&#8377;</span>Request Payment
+			<span style="margin-right: 4px">&#8377;</span>Request Payment
 		</button>
 	</form>
-	<b>
-		Health Status:
-		<span class="<%= meter.status.toLowerCase() === 'healthy' ? 'status-healthy' : 'status-alert' %>"> <%= meter.status %> </span>
-	</b>
-</h3>
+</div>
 
 <div class="row g-4 mb-5">
 	<div class="col-lg-6 col-md-12">
