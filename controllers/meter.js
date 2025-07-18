@@ -9,7 +9,7 @@ module.exports.index = async (req, res) => {
 };
 
 module.exports.createMeter = async (req, res) => {
-	const { name, location } = req.body.meter;
+	let { name, location } = req.body.meter;
 
 	// Generate 5 readings for each parameter
 	const current = generateFiveReadings(0, 14);
@@ -68,7 +68,7 @@ module.exports.createMeter = async (req, res) => {
 		status = "Alert";
 	}
 	//Fire prediction logic
-	const fire = Math.random() < 0.4;
+	let fire = Math.random() < 0.4;
 	if (fire) {
 		console.log(`🔥 EMERGENCY: Fire detected at meter "${name}" — calling emergency services... 📞`);
         fire = true;
