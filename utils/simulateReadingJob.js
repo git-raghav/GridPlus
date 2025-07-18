@@ -83,7 +83,7 @@ async function simulateNewReading() {
 		}
 
 		// Fire prediction
-		const fire = Math.random() < 0.4;
+		let fire = Math.random() < 0.4;
 		if (fire) {
 			console.log(`🔥 EMERGENCY: Fire detected at meter ${meter.name} — calling emergency services... 📞`);
 			meter.fire = true;
