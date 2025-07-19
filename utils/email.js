@@ -14,7 +14,7 @@ async function sendFireAlertEmail(meterName, location) {
 
     const mailOptions = {
         from: process.env.EMAIL_USER,
-        to: "raghavagarwal3618@gmail.com",
+        to: "aryan000project@gmail.com",
         subject: "🔥 Fire Detected!",
         text: `Fire detected at meter "${meterName}" located at "${location}". Please take immediate action.`,
     };
@@ -57,7 +57,7 @@ Latest Readings:
 
     const mailOptions = {
         from: "projectgroup950@gmail.com",
-        to: "raghavagarwal3618@gmail.com", // Replace with actual recipient
+        to: "aryan000project@gmail.com", // Replace with actual recipient
         subject,
         text,
     };
