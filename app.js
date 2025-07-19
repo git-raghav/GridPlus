@@ -68,7 +68,7 @@ const MONGO_URL = process.env.MONGO_URL;
 main()
 	.then(() => {
 		console.log("Connected to MongoDB");
-        // cron.schedule("*/1 * * * *", async () => {
+        // cron.schedule("*/15 * * * *", async () => {
 		// 	console.log("⏱️  Running meter simulation...");
 		// 	try {
 		// 		await simulateNewReading();
@@ -76,8 +76,8 @@ main()
 		// 		console.error("❌ Error in simulateNewReading:", err.message);
 		// 	}
 		// });
-        // Payment request every 20 minutes
-		// cron.schedule("*/1 * * * *", async () => {
+        // // Payment request every 20 minutes
+		// cron.schedule("*/25 * * * *", async () => {
 		// 	console.log("💸 Sending payment requests for all meters...");
 		// 	try {
 		// 		const meters = await Meter.find({}).populate("owner");

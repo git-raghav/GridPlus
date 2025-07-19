@@ -180,8 +180,8 @@
 		document.getElementById('alertDoughnutChart').style.display = 'none';
 		document.getElementById('noChartDataMsg').style.display = 'block';
 	}
-
-	// CSV Download functionality
+	});
+    // CSV Download functionality
 	function downloadCSVFromAlerts(alerts) {
 		if (!alerts || !alerts.length) return;
 		const headers = ["Meter Name", "Comment", "Cause of Alert", "Voltage", "Current", "Temperature", "Load", "Acknowledged", "Triggered At"];
@@ -210,7 +210,6 @@
 
 	// Make sortedAlerts available in JS for CSV export
 	const sortedAlerts = <%- JSON.stringify(sortedAlerts) %>;
-	});
 </script>
 <script>
 	document.querySelector(".AlertCSV").addEventListener("click", function () {
