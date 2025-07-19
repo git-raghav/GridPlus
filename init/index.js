@@ -7,7 +7,7 @@ const Alert = require("../models/alert.js");// Import the alert model
 const User = require("../models/user.js");// Import the user model
 const { sampleMeters, sampleAlerts } = require('./data.js');// Import the sample data
 
-const MONGO_URL = process.env.MONGO_URL; // MongoDB connection URL
+const MONGO_URL = process.env.ATLAS_DB; // MongoDB connection URL
 main()
     .then(() => {
         console.log("Connected to MongoDB");

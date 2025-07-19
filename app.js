@@ -37,17 +37,17 @@ app.engine("ejs", ejsMate); // using ejsMate for layout support in EJS
 app.use(
     session({
         store: MongoStore.create({
-            mongoUrl: process.env.MONGO_URL,
+            mongoUrl: process.env.ATLAS_DB,
             crypto: {
                 secret: process.env.SESSION_SECRET
             },
             touchAfter: 24 * 60 * 60,
+            ttl: 7 * 24 * 60 * 60, //Set TTL explicitly to 7 days
         }),
         secret: process.env.SESSION_SECRET,
         resave: false,
-        saveUninitialized: true,
+        saveUninitialized: false,
         cookie: {
-            expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
             httpOnly: true, // prevents client-side JavaScript from accessing the cookie
         },
@@ -63,12 +63,12 @@ passport.serializeUser(User.serializeUser()); // These handle how user data is s
 passport.deserializeUser(User.deserializeUser()); // These handle how user data is stored in and retrieved from the session.
 
 /* -------------------------- connecting to MongoDB ------------------------- */
-const MONGO_URL = process.env.MONGO_URL;
+const MONGO_URL = process.env.ATLAS_DB;
 
 main()
 	.then(() => {
 		console.log("Connected to MongoDB");
-        // cron.schedule("*/15 * * * *", async () => {
+        // cron.schedule("*/1 * * * *", async () => {
 		// 	console.log("⏱️  Running meter simulation...");
 		// 	try {
 		// 		await simulateNewReading();
@@ -77,7 +77,7 @@ main()
 		// 	}
 		// });
         // // Payment request every 20 minutes
-		// cron.schedule("*/25 * * * *", async () => {
+		// cron.schedule("*/20 * * * *", async () => {
 		// 	console.log("💸 Sending payment requests for all meters...");
 		// 	try {
 		// 		const meters = await Meter.find({}).populate("owner");
