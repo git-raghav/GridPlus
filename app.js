@@ -68,27 +68,27 @@ const MONGO_URL = process.env.ATLAS_DB;
 main()
 	.then(() => {
 		console.log("Connected to MongoDB");
-        // cron.schedule("*/1 * * * *", async () => {
-		// 	console.log("⏱️  Running meter simulation...");
-		// 	try {
-		// 		await simulateNewReading();
-		// 	} catch (err) {
-		// 		console.error("❌ Error in simulateNewReading:", err.message);
-		// 	}
-		// });
-        // // Payment request every 20 minutes
-		// cron.schedule("*/20 * * * *", async () => {
-		// 	console.log("💸 Sending payment requests for all meters...");
-		// 	try {
-		// 		const meters = await Meter.find({}).populate("owner");
-		// 		for (const meter of meters) {
-		// 			await sendPaymentRequestEmail(meter);
-		// 		}
-		// 		console.log("✅ Payment requests sent for all meters.");
-		// 	} catch (err) {
-		// 		console.error("❌ Error in payment request cron:", err.message);
-		// 	}
-		// });
+        cron.schedule("*/20 * * * *", async () => {
+			console.log("⏱️  Running meter simulation...");
+			try {
+				await simulateNewReading();
+			} catch (err) {
+				console.error("❌ Error in simulateNewReading:", err.message);
+			}
+		});
+        // Payment request every 20 minutes
+		cron.schedule("*/30 * * * *", async () => {
+			console.log("💸 Sending payment requests for all meters...");
+			try {
+				const meters = await Meter.find({}).populate("owner");
+				for (const meter of meters) {
+					await sendPaymentRequestEmail(meter);
+				}
+				console.log("✅ Payment requests sent for all meters.");
+			} catch (err) {
+				console.error("❌ Error in payment request cron:", err.message);
+			}
+		});
 	})
 	.catch((err) => console.log(err));
 
