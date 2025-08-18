@@ -1,9 +1,9 @@
 # GridPlus
 
-[Live Demo](http://54.166.141.1:3000)
+[Live Demo](https://d17yvdk2uely6c.cloudfront.net/meters)
 
 > **IBM Internship Project** > _Lead Developer: Raghav Agarwal_
-> Deployed on **AWS EC2 t3.micro** | Future AWS integrations planned
+> Deployed on **AWS EC2 t3.micro & Cloudfront** | Future AWS integrations planned
 
 ---
 
@@ -47,7 +47,7 @@
 -   **Validation:** Joi (client & server-side)
 -   **Email:** Nodemailer (Gmail/SMTP)
 -   **Other:** Chart.js (analytics), method-override, dotenv, connect-flash, node-cron
--   **DevOps:** Deployed on AWS EC2 t3.micro (Ubuntu), future AWS tools planned
+-   **DevOps:** Deployed on AWS EC2 t3.micro (Ubuntu) & Cloudfront, future AWS tools planned
 
 ---
 
